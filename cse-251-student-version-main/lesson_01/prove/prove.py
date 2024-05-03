@@ -173,16 +173,16 @@ def run_with_threads(tur, log, main_turtle):
     log.start_timer('Start Drawing With Threads')
     tur.move(0, 0)
 
-    def draw_squares_thread():
+    def draw_sq_thread():
         draw_squares(tur)
 
-    def draw_circles_thread():
+    def draw_cir_thread():
         draw_circles(tur)
 
-    def draw_triangles_thread():
+    def draw_tri_thread():
         draw_triangles(tur)
 
-    def draw_rectangles_thread():
+    def draw_rect_thread():
         draw_rectangles(tur)
 
     sq_thread = threading.Thread(target=draw_sq_thread)
