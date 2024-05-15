@@ -2,7 +2,7 @@
 Course: CSE 251 
 Lesson: L02 Team Activity
 File:   team.py
-Author: <Add name here>
+Author: Lucy
 
 Purpose: Team Activity: 
 
@@ -121,8 +121,7 @@ class Board():
     def _word_at_this_location(self, row, col, direction, word):
         """ Helper function: is the word found on the board at (x, y) in a direction """
         dir_x, dir_y = self.directions[direction]
-        changes = []
-        changes.append
+        highlight_copy = copy.deepcopy(self.highlighting)
         for letter in word:
             board_letter = self.get_letter(row, col)
             if board_letter == letter:
@@ -137,19 +136,39 @@ class Board():
     def find_word(self, word):
         """ Find a word in the board """
         print(f'Finding {word}...')
+        first_letter = word[0]
+        found = False
+
         for row in range(self.size):
             for col in range(self.size):
-                for d in range(0, 8):
-                    if self._word_at_this_location(row, col, d, word):
-                        return True
-        return False
+                if self.board[row][col] == first_letter:
+                    for d in range(8):
+                        if self._word_at_this_location(row, col, d, word):
+                            found = True
+                            break
+                if found:
+                    break
+            if found:
+                break
 
+        if not found:
+            print(f'Error: Could not find "{word}"')
+        return found
+
+
+def find_word_wrapper(args):
+    board, word = args
+    return board.find_word(word)
 
 def main():
     board = Board()
     board.display()
 
     start = time.perf_counter()
+
+    with mp.Pool() as pool:
+        results = pool.map(find_word_wrapper, [(board, word) for word in words])
+
     for word in words:
         if not board.find_word(word):
             print(f'Error: Could not find "{word}"')
