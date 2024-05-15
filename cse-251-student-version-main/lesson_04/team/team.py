@@ -2,7 +2,7 @@
 Course: CSE 251 
 Lesson: L04 Team Activity
 File:   team.py
-Author: <Add name here>
+Author: Lucy Haskew
 
 Purpose: Practice concepts of Queues, Locks, and Semaphores.
 
@@ -16,62 +16,72 @@ Question:
 """
 
 import threading
-import queue
+from queue import Queue
 import requests
 import json
 
 # Include cse 251 common Python files
-from cse251 import *
+from cse251 import load_json_file
 
 RETRIEVE_THREADS = 4        # Number of retrieve_threads
 NO_MORE_VALUES = 'No more'  # Special value to indicate no more items in the queue
 
-def retrieve_thread():  # TODO add arguments
+def retrieve_thread(data_queue, log):  
     """ Process values from the data_queue """
 
     while True:
-        # TODO check to see if anything is in the queue
+        # Check to see if anything is in the queue
+        if not data_queue.empty():
+            # Process the value retrieved from the queue
+            value = data_queue.get()
+            
+            # Make Internet call to get characters name and log it
+            # Placeholder for Internet call and logging
+            log.write(f"Retrieved value from queue: {value}")
 
-        # TODO process the value retrieved from the queue
+        else:
+            # If queue is empty, break the loop
+            break
 
-        # TODO make Internet call to get characters name and log it
-        pass
+def file_reader(data_queue, log): 
+    """ This thread reads the data file and places the values in the data_queue """
 
-
-
-def file_reader(): # TODO add arguments
-    """ This thread reading the data file and places the values in the data_queue """
-
-    # TODO Open the data file "urls.txt" and place items into a queue
+    # Open the data file "urls.txt" and place items into a queue
+    with open("/Users/lucyhaskew/Desktop/CSE251/cse-251-student-version-main", "r") as file:
+        for line in file:
+            data_queue.put(line.strip())
 
     log.write('finished reading file')
 
-    # TODO signal the retrieve threads one more time that there are "no more values"
-
-
+    # Signal the retrieve threads one more time that there are "no more values"
+    for _ in range(RETRIEVE_THREADS):
+        data_queue.put(NO_MORE_VALUES)
 
 def main():
     """ Main function """
 
     log = Log(show_terminal=True)
 
-    # TODO create queue
-    # TODO create semaphore (if needed)
+    data_queue = Queue(maxsize=0)
 
-    # TODO create the threads. 1 filereader() and RETRIEVE_THREADS retrieve_thread()s
-    # Pass any arguments to these thread need to do their job
+    file_reader_thread = threading.Thread(target=file_reader, args=(data_queue, log))
+    retrieve_threads = [threading.Thread(target=retrieve_thread, args=(data_queue, log)) for _ in range(RETRIEVE_THREADS)]
 
     log.start_timer()
 
-    # TODO Get them going - start the retrieve_threads first, then file_reader
+    for thread in retrieve_threads:
+        thread.start()
+    file_reader_thread.start()
 
-    # TODO Wait for them to finish - The order doesn't matter
+    for thread in retrieve_threads:
+        thread.join()
+    file_reader_thread.join()
 
     log.stop_timer('Time to process all URLS')
 
-
 if __name__ == '__main__':
     main()
+
 
 
 
