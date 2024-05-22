@@ -71,7 +71,7 @@ def main():
     log = Log(show_terminal=True)
     log.start_timer()
 
-    prime_process_count = 1  # Start with one prime process
+    prime_process_count = 7 # Start with one prime process
 
     queue = mp.Queue()
     manager = mp.Manager()
@@ -84,7 +84,7 @@ def main():
 
     # Create and start the prime checking processes
     processes = []
-    for _ in range(prime_process_count):
+    for i in range(prime_process_count):
         process = mp.Process(target=prime_process, args=(queue, primes, lock))
         processes.append(process)
         process.start()
