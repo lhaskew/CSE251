@@ -2,7 +2,7 @@
 Course: CSE 251 
 Lesson: L05 Team Activity
 File:   team.py
-Author: <Add your name here>
+Author: <Lucy Haskew>
 
 Purpose: Check for prime values
 
@@ -19,10 +19,7 @@ import multiprocessing as mp
 import random
 from os.path import exists
 
-#Include cse 251 common Python files
 from cse251 import *
-
-PRIME_PROCESS_COUNT = 1
 
 def is_prime(n: int) -> bool:
     """Primality test using 6k+-1 optimization.
@@ -39,48 +36,72 @@ def is_prime(n: int) -> bool:
         i += 6
     return True
 
-
-# TODO create read_thread function
-
-
-# TODO create prime_process function
-
-
 def create_data_txt(filename):
-    # only create if is doesn't exist 
+    """Create data file if it does not exist"""
     if not exists(filename):
         with open(filename, 'w') as f:
-            for _ in range(1000):
+            for i in range(1000):
                 f.write(str(random.randint(10000000000, 100000000000000)) + '\n')
 
+def read_thread(filename, queue, prime_process_count):
+    """Reading Thread: Reads numbers from the data file and places them onto a queue."""
+    with open(filename, 'r') as f:
+        for line in f:
+            number = int(line.strip())
+            queue.put(number)
+    for number in range(prime_process_count):
+        queue.put(None)
+
+def prime_process(queue, primes, lock):
+    """Prime Process: Processes numbers from the queue to check if they are prime and adds them to a shared list if they are."""
+    while True:
+        number = queue.get()
+        if number is None:
+            break
+        if is_prime(number):
+            with lock:
+                primes.append(number)
 
 def main():
-    """ Main function """
+    """Main function"""
 
-    # Create the data file for this demo if it does not already exist.
     filename = 'data.txt'
     create_data_txt(filename)
 
     log = Log(show_terminal=True)
     log.start_timer()
 
-    # TODO Create shared data structures
+    prime_process_count = 1  # Start with one prime process
 
-    # TODO create reading thread
+    queue = mp.Queue()
+    manager = mp.Manager()
+    primes = manager.list()
+    lock = manager.Lock()
 
-    # TODO create prime processes
+    # Create and start the reading thread
+    reader_thread = threading.Thread(target=read_thread, args=(filename, queue, prime_process_count))
+    reader_thread.start()
 
-    # TODO Start them all
+    # Create and start the prime checking processes
+    processes = []
+    for _ in range(prime_process_count):
+        process = mp.Process(target=prime_process, args=(queue, primes, lock))
+        processes.append(process)
+        process.start()
 
-    # TODO wait for them to complete
+    # Wait for the reading thread to finish
+    reader_thread.join()
 
-    log.stop_timer(f'All primes have been found using {PRIME_PROCESS_COUNT} processes')
+    # Wait for all the processes to finish
+    for process in processes:
+        process.join()
 
-    # display the list of primes
-    print(f'There are {len(primes)} found:')
+    log.stop_timer(f'All primes have been found using {prime_process_count} process(es)')
+
+    # Display the list of primes
+    print(f'There are {len(primes)} primes found:')
     for prime in primes:
         print(prime)
-
 
 if __name__ == '__main__':
     main()

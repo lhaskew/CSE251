@@ -117,18 +117,18 @@ def main():
     api_urls = response.json()
 
     # Retrieve Details on film 6
-    film_url = api_urls['films'] + '6'
-    film_details = get_film_details(film_url)
+    movie_url = api_urls['films'] + '6'
+    movie_details = get_film_details(movie_url)
     if not film_details:
         log.write('Failed to retrieve film 6 details')
         return
 
     # Get URLs for each resource category
-    people_urls = film_details['characters']
-    starships_urls = film_details['starships']
-    vehicles_urls = film_details['vehicles']
-    species_urls = film_details['species']
-    planets_urls = film_details['planets']
+    people_urls = movie_details['characters']
+    starships_urls = movie_details['starships']
+    vehicles_urls = movie_details['vehicles']
+    species_urls = movie_details['species']
+    planets_urls = movie_details['planets']
 
     # Retrieve names using threads
     people_names = get_resource_names(people_urls)
@@ -139,10 +139,10 @@ def main():
 
     # Display results
     log.write("----------------------------------------")
-    log.write(f"Title   : {film_details['title']}")
-    log.write(f"Director: {film_details['director']}")
-    log.write(f"Producer: {film_details['producer']}")
-    log.write(f"Released: {film_details['release_date']}\n")
+    log.write(f"Title   : {movie_details['title']}")
+    log.write(f"Director: {movie_details['director']}")
+    log.write(f"Producer: {movie_details['producer']}")
+    log.write(f"Released: {movie_details['release_date']}\n")
 
     log.write(f"Characters: {len(people_names)}")
     log.write(", ".join(people_names) + "\n")
