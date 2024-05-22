@@ -42,7 +42,6 @@ Outline of API calls to server
 1) Use TOP_API_URL to get the dictionary above
 2) Add "6" to the end of the films endpoint to get film 6 details
 3) Use as many threads possible to get the names of film 6 data (people, starships, ...)
-
 """
 
 from datetime import datetime, timedelta
@@ -58,21 +57,23 @@ TOP_API_URL = 'http://127.0.0.1:8790'
 
 # Global Variables
 call_count = 0
+lock = threading.Lock()
 
 
 class Request_Thread(threading.Thread):
 
     def __init__(self, url):
         # Call the Thread class's init function
-        # threading.Thread.__init__(self)
         super().__init__()
         self.url = url
         self.response = {}
         self.status_code = {}
 
     def run(self):
+        global call_count
         response = requests.get(self.url)
-        # Check the status code to see if the request succeeded.
+        with lock:
+            call_count += 1
         self.status_code = response.status_code
         if response.status_code == 200:
             self.response = response.json()
@@ -80,22 +81,87 @@ class Request_Thread(threading.Thread):
             print('RESPONSE = ', response.status_code)
 
 
-# TODO Add any functions you need here
+def get_film_details(film_url):
+    response = requests.get(film_url)
+    global call_count
+    with lock:
+        call_count += 1
+    if response.status_code == 200:
+        return response.json()
+    return None
+
+
+def get_resource_names(urls):
+    threads = [Request_Thread(url) for url in urls]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    return sorted([thread.response['name'] for thread in threads if thread.response])
 
 
 def main():
     log = Log(show_terminal=True)
     log.start_timer('Starting to retrieve data from the server')
 
-    # TODO Retrieve Top API urls
+    # Retrieve Top API urls
+    response = requests.get(TOP_API_URL)
+    global call_count
+    with lock:
+        call_count += 1
 
-    # TODO Retrieve Details on film 6
+    if response.status_code != 200:
+        log.write('Failed to retrieve top API URL')
+        return
 
-    # TODO Display results
+    api_urls = response.json()
+
+    # Retrieve Details on film 6
+    film_url = api_urls['films'] + '6'
+    film_details = get_film_details(film_url)
+    if not film_details:
+        log.write('Failed to retrieve film 6 details')
+        return
+
+    # Get URLs for each resource category
+    people_urls = film_details['characters']
+    starships_urls = film_details['starships']
+    vehicles_urls = film_details['vehicles']
+    species_urls = film_details['species']
+    planets_urls = film_details['planets']
+
+    # Retrieve names using threads
+    people_names = get_resource_names(people_urls)
+    starships_names = get_resource_names(starships_urls)
+    vehicles_names = get_resource_names(vehicles_urls)
+    species_names = get_resource_names(species_urls)
+    planets_names = get_resource_names(planets_urls)
+
+    # Display results
+    log.write("----------------------------------------")
+    log.write(f"Title   : {film_details['title']}")
+    log.write(f"Director: {film_details['director']}")
+    log.write(f"Producer: {film_details['producer']}")
+    log.write(f"Released: {film_details['release_date']}\n")
+
+    log.write(f"Characters: {len(people_names)}")
+    log.write(", ".join(people_names) + "\n")
+
+    log.write(f"Planets: {len(planets_names)}")
+    log.write(", ".join(planets_names) + "\n")
+
+    log.write(f"Starships: {len(starships_names)}")
+    log.write(", ".join(starships_names) + "\n")
+
+    log.write(f"Vehicles: {len(vehicles_names)}")
+    log.write(", ".join(vehicles_names) + "\n")
+
+    log.write(f"Species: {len(species_names)}")
+    log.write(", ".join(species_names) + "\n")
 
     log.stop_timer('Total Time To complete')
     log.write(f'There were {call_count} calls to the server')
-    
+
 
 if __name__ == "__main__":
     main()
