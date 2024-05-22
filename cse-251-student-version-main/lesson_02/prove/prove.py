@@ -2,7 +2,7 @@
 Course: CSE 251 
 Lesson: L02 Prove
 File:   prove.py
-Author: <Add name here>
+Author: <Lucy Haskew>
 
 Purpose: Retrieve Star Wars details from a server
 
