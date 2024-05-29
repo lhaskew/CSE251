@@ -71,7 +71,7 @@ def main():
     log = Log(show_terminal=True)
     log.start_timer()
 
-    prime_process_count = 7 # Start with one prime process
+    prime_process_count = 4 # Start with one prime process
 
     queue = mp.Queue()
     manager = mp.Manager()
