@@ -28,11 +28,9 @@ def sender(conn, filename, counter):
     """ function to send messages to other end of pipe """
     with open(filename, 'r') as file:
         for line in file:
-            words = line.split()
-            for word in words:
-                conn.send(word)
+            for char in line:
+                conn.send(char)
                 counter.value += 1
-            conn.send('\n')
     conn.send('EOF')  # Sending EOF to indicate end of file
     conn.close()
 
@@ -41,10 +39,10 @@ def receiver(conn, filename, counter):
     """ function to print the messages received from other end of pipe """
     with open(filename, 'w') as file:
         while True:
-            word = conn.recv()
-            if word == 'EOF':
+            char = conn.recv()
+            if char == 'EOF':
                 break
-            file.write(word + ' ')
+            file.write(char)
             counter.value += 1
     conn.close()
 
